@@ -1,0 +1,281 @@
+ <!-- 
+/* OPTIMIZATIONS */
+[ ] Falsche mögliche Antworten ausbauen. Kinder sollen bis ultimo spielen können und neue Highscores aufstellen
+[ ] Auswahl zwischen Addition und Subtraktion
+[x] Wenn Antwort korrekt, neue Rechnung stellen
+[x] Zufallsrechenarten ausgeben
+[ ] Umstellung auf Full-Screen
+[ ] Optimierung für mobile Endgeräte
+[x] Zähler für richtig und falsch gegebene Antworten
+[ ] Ton abspielen bei falscher/richtiger Antwort
+[ ] Punktezahl abhängig von Dauer vergeben, bis die richtige Antwort gegeben wurde
+[ ] Wie viel Punkte möchtest du erreichen? Dementsprechend Bulletpoints anzeigen, die mit jeder richtigen Antwort gefüllt werden und mit jeder falschen wieder verschwinden.
+[ ] Geasmtzähler implementieren, wenn 3 x 10 richtige Antworten gegeben wurden soll 30 angezeigt werden
+[ ] Namensprompt durch EIngabefeld erstzen
+[ ] Multiple-Choice Aufgaben umstellen, ggf. durch Checkbox ob Multiple Choice gewünscht ist
+[ ] Gesamtzähler einbauen
+[ ] Schwierigkeitsgrade mit Schwer=1, Mittel=3 und Leicht=5 mögliche Fehler einbauen als RadioButton.
+[ ] Zahlenräume von 1-10, 1-20, und 1-30 per Radiobutton festelegen
+[ ] Operatoren per Radiobutton festlegen: Plus, Minus, PlusMinus
+[ ] rote Bulletpoints beim einblenden animieren (pulsierend)
+[ ] Eingabetaste darf Eingabe nur annehmen, wenn eine Zahl eingegeben wurde
+[ ] CSS-Klasse "Cursor:Pointer" auf die Klasse "wrong-div" darf erst gesetzt werden, wenn der Zähler für falsche Antworten hochgezählt hat
+[ ] XXXXXXXXXXXXXXXXXXXX
+-->
+
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>Calculon Kids</title>
+	<!-- <meta name="viewport" content="width=device-width, initial-scale=1"> -->
+	<link type="text/css" rel="stylesheet" href="style.css"></link>
+	<link type="text/css" rel="stylesheet" href="style_mobile.css"></link>
+	<link type="text/css" rel="stylesheet" href="animate.css"></link>
+	<link rel="icon" href="favicon.png" type="image" />
+	<!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>-->
+	<script src="jquery-3.3.1.min.js"></script>
+	<!-- <link rel="stylesheet/less" type="text/css" href="styles.less" /> -->
+	<!-- <script src="less.min.js" type="text/javascript"></script> -->
+</head>
+
+<body onload="randomizeNumbers()">
+	<div class="wrapper">
+		<div class="newGameButton">
+			<button class="btn btn-1 btn-1c" onclick="resetGame()">Neues Spiel</button>
+		</div>
+		<div class="randomNumbers">
+			<span id="firstNumber"></span>
+			<span id="operator"></span>
+			<span id="secondNumber"></span>
+		</div>
+		<div class="resultInput">
+			<input id="result" type="text" autofocus onkeypress="return isNumberKey(event)" maxlength="3" >
+		</div>
+		<div class="counter">
+			<div class="correctDiv"><span id="totalCorrectAnswers" class="correctCounter">0</span></div>
+			<div class="wrongDiv" onclick="repeatWrongCalculations()"><span id="totalWrongAnswers" class="wrongCounter">0</span></div>
+		</div>
+	</div>
+
+
+	<script>
+
+		var correctResult = "";
+		var firstNumber = 0;
+		var secondNumber = 0;
+		var operatorIndex = 0;
+		var operator;
+		var correctAnswers = 0;
+		var wrongAnswers = 0;
+		var animateAnswerDots = "animated pulse";
+		var animateRecalcAnswerDots = "animated wobble";
+		var animateRandomNumbers = "animated wobble";
+		var wrongCalculations = [];
+		var recalculation = false;
+
+		function saveWrongCalculations(firstNumber, secondNumber) {
+			wrongCalculations.push({
+            	"firstNumber": firstNumber,
+            	"secondNumber": secondNumber,
+            	"operator" : operator
+        	});
+        	console.log(wrongCalculations);
+		}
+
+
+		function randomizeNumbers(){
+			firstNumber = Math.floor(Math.random() * 20) +1;
+			document.getElementById('firstNumber').innerHTML = firstNumber;
+			secondNumber = Math.floor(Math.random() * 20) +1;
+			document.getElementById('secondNumber').innerHTML = secondNumber;
+			randomizeOperatorIndex();
+			calculateNumbers(firstNumber, secondNumber, operator);
+		}
+
+		function randomizeOperatorIndex(){
+			operatorIndex = Math.floor(Math.random() * 2) + 1;
+			switch (operatorIndex){
+				case 1: document.getElementById('operator').innerHTML = "+";
+					operator = "+";
+					break;
+				case 2: document.getElementById('operator').innerHTML = "-"; 
+					operator = "-";
+					break;
+			}
+		}
+
+		function calculateNumbers(firstNumber, secondNumber, operator){
+			console.log(firstNumber + " : " + secondNumber + " : " + operator);
+			document.getElementById('operator').innerHTML = operator;
+			//hier ist der fehler: operator index ist noch aus der randomizeOperatorIndex-Funktion vorbelegt. Es wird aber durch die funktion 
+			// repeatWrongCalculations evtl. ein anderer operator reingegeben, was zu einem falschen correctResult führt.
+			// manchmal stimmen der reingegebene operator mit dem operatorIndex überein und dann ist auch das ergebnis korrekt, manchmal aber nicht
+			//if(operatorIndex == 2 && firstNumber < secondNumber){
+			if(operator == "-" && firstNumber < secondNumber){
+				document.getElementById('firstNumber').innerHTML = secondNumber;
+				document.getElementById('secondNumber').innerHTML = firstNumber;
+				correctResult = secondNumber - firstNumber;
+			}else if(operator == "-" && firstNumber > secondNumber){
+				document.getElementById('firstNumber').innerHTML = firstNumber;
+				document.getElementById('secondNumber').innerHTML = secondNumber;
+				correctResult = firstNumber - secondNumber;		
+			}else if(firstNumber == secondNumber && operator == "-"){
+				document.getElementById('firstNumber').innerHTML = firstNumber;
+				document.getElementById('secondNumber').innerHTML = secondNumber;
+				correctResult = firstNumber - secondNumber;
+			}else{
+				document.getElementById('firstNumber').innerHTML = firstNumber;
+				document.getElementById('secondNumber').innerHTML = secondNumber;
+				correctResult = firstNumber + secondNumber;
+			}
+		}
+
+		var result = document.getElementById('result');
+		result.addEventListener("keyup", function(event){
+			event.preventDefault();
+			if(event.keyCode === 13) {
+				checkResult(document.getElementById('result').value);
+			}
+		});
+
+		function checkResult(result){
+			if(recalculation == false && result == correctResult){
+				console.log("correct result, no recalc");
+				correctAnswers++;
+				document.getElementById('totalCorrectAnswers').innerHTML = correctAnswers;
+				$('.correctDiv').addClass(animateAnswerDots);
+				setTimeout(function(){ 
+					document.getElementById('result').value = "";
+					document.getElementById('firstNumber').innerHTML = "";
+					document.getElementById('secondNumber').innerHTML = "";
+					$('.correctDiv').removeClass(animateAnswerDots);
+					randomizeNumbers();
+				}, 1100);	
+			}else if(recalculation == true && result == correctResult){
+				console.log("correct result, recalc");
+				correctAnswers++;
+				document.getElementById('totalCorrectAnswers').innerHTML = correctAnswers;
+				wrongAnswers--;
+				document.getElementById('totalWrongAnswers').innerHTML = wrongAnswers;
+				recalculation = false;
+				wrongCalculations.shift();
+				if(wrongCalculations.length == 0){
+					$('.wrongDiv').css('cursor','default');
+				}
+				$('.correctDiv').addClass(animateAnswerDots);
+				setTimeout(function(){ 
+					document.getElementById('result').value = "";
+					document.getElementById('firstNumber').innerHTML = "";
+					document.getElementById('secondNumber').innerHTML = "";
+					$('.correctDiv').removeClass(animateAnswerDots);
+					randomizeNumbers();
+				}, 1100);
+			}else if(recalculation == true && result != correctResult){
+				// Recalculation, aber das Ergebnis ist schon wieder falsch!
+				// WrongCounter darf nicht höher gezählt werden
+				// Die beiden Zahlen dürfen nicht erneut im Array gespeichert werden
+				// CorrectCounter darf nicht verändert werden
+				console.log("wrong result, recalc");
+				//correctAnswers++;
+				//document.getElementById('totalCorrectAnswers').innerHTML = correctAnswers;
+				//wrongAnswers--;
+				//document.getElementById('totalWrongAnswers').innerHTML = wrongAnswers;
+				if(wrongCalculations.length == 0){
+					recalculation = false;
+					$('.wrongDiv').css('cursor','default');
+				}
+				$('.wrongDiv').addClass(animateRecalcAnswerDots);
+				setTimeout(function(){ 
+					document.getElementById('result').value = "";
+					document.getElementById('firstNumber').innerHTML = "";
+					document.getElementById('secondNumber').innerHTML = "";
+					$('.wrongDiv').removeClass(animateRecalcAnswerDots);
+					randomizeNumbers();
+				}, 1100);
+			}else{
+				console.log("wrong result, no recalc");
+				saveWrongCalculations(firstNumber, secondNumber);
+				wrongAnswers++;
+				document.getElementById('totalWrongAnswers').innerHTML = wrongAnswers;
+				//if wrongDiv has not cursor property set to pointer, do so
+				if($('.wrongDiv').css('cursor') !== 'pointer'){
+					$('.wrongDiv').css('cursor','pointer');
+				}
+				$('.wrongDiv').addClass(animateAnswerDots);
+				setTimeout(function(){ 
+					document.getElementById('result').value = "";
+					document.getElementById('firstNumber').innerHTML = "";
+					document.getElementById('secondNumber').innerHTML = "";
+					$('.wrongDiv').removeClass(animateAnswerDots);
+					randomizeNumbers();
+				}, 1100);
+			}
+		}
+
+		function resetGame(){
+			correctAnswers = 0;
+			wrongAnswers = 0;
+			document.getElementById('totalCorrectAnswers').innerHTML = "0";
+			document.getElementById('totalWrongAnswers').innerHTML = "0";
+			document.getElementById("result").focus();
+			document.getElementById('result').value = "";
+			$('.randomNumbers').addClass(animateRandomNumbers);
+			setTimeout(function(){ 
+				$('.randomNumbers').removeClass(animateRandomNumbers);
+				}, 1100);
+			randomizeNumbers();
+		}
+
+		function repeatWrongCalculations(){
+			//if wrongCalculations-Array == 0 -> return
+			//else run code below
+			console.log("Array-Length: " + wrongCalculations.length);
+			if(wrongCalculations.length == 0){
+				return;
+			}else{
+				var firstNumberofWrongCalc = wrongCalculations[0].firstNumber;
+				var secondNumberofWrongCalc = wrongCalculations[0].secondNumber;
+				var operatorWrongCalc = wrongCalculations[0].operator;
+				recalculation = true;
+				reCalculateNumbers(firstNumberofWrongCalc, secondNumberofWrongCalc, operatorWrongCalc);
+			}
+			document.getElementById("result").focus();
+		}
+
+		function reCalculateNumbers(firstNumber, secondNumber, operator){
+			console.log("Recalculation-Variable: "+recalculation);
+			document.getElementById('operator').innerHTML = operator;
+			//hier ist der fehler: operator index ist noch aus der randomizeOperatorIndex-Funktion vorbelegt. Es wird aber durch die funktion 
+			// repeatWrongCalculations evtl. ein anderer operator reingegeben, was zu einem falschen correctResult führt.
+			// manchmal stimmen der reingegebene operator mit dem operatorIndex überein und dann ist auch das ergebnis korrekt, manchmal aber nicht
+			//if(operatorIndex == 2 && firstNumber < secondNumber){
+			if(operator == "-" && firstNumber < secondNumber){
+				document.getElementById('firstNumber').innerHTML = secondNumber;
+				document.getElementById('secondNumber').innerHTML = firstNumber;
+				correctResult = secondNumber - firstNumber;
+			}else if(operator == "-" && firstNumber > secondNumber){
+				document.getElementById('firstNumber').innerHTML = firstNumber;
+				document.getElementById('secondNumber').innerHTML = secondNumber;
+				correctResult = firstNumber - secondNumber;		
+			}else if(firstNumber == secondNumber && operator == "-"){
+				document.getElementById('firstNumber').innerHTML = firstNumber;
+				document.getElementById('secondNumber').innerHTML = secondNumber;
+				correctResult = firstNumber - secondNumber;
+			}else{
+				document.getElementById('firstNumber').innerHTML = firstNumber;
+				document.getElementById('secondNumber').innerHTML = secondNumber;
+				correctResult = firstNumber + secondNumber;
+			}
+		}
+
+		function isNumberKey(evt)
+		{
+			var charCode = (evt.which) ? evt.which : event.keyCode
+			if (charCode > 31 && (charCode < 48 || charCode > 57))
+				return false;
+			return true;
+		}
+
+	</script>
+</body>
+</html>

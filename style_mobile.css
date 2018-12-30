@@ -1,0 +1,27 @@
+/* Responsiveness for mobile Devices */
+
+@media only screen and (max-device-width: 780px) {
+    .randomNumbers {
+		font-size: 0.8em;
+	}
+}
+
+@media only screen and (max-device-width: 780px) {
+    .wrapper {
+		margin: auto;
+	}
+}
+
+
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+
+
+/* Responsiveness for Browser-Viewports */
+
+@media only screen and (max-width: 780px) {
+    .randomNumbers {
+		font-size: 0.6em;
+	}
+}
